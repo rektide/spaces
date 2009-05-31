@@ -1,0 +1,2 @@
+#!/bin/sh
+chromium_extension.py --indir=$HOME/projects/spaces/chrome --outfile=spaces.crx

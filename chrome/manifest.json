@@ -1,0 +1,21 @@
+{
+	"description": "Space Tab Logger", 
+	"id": "E1C5BD814AE7E47DC634C175681316905C945515", 
+	"name": "Space Logger", 
+	"permissions": [
+		"http://*.eldergods.com/", 
+		"http://*.eldergods.com:8080/"
+	], 
+	"toolstrips": [
+		"ext/space_strip.html"
+	],
+	"content_scripts": [{
+		"matches": ["http://*.google.com/*"],
+		"css": [],
+		"js": [
+			"content/hotkey.js",
+			"content/popup.js"
+		]
+	}],
+	"version": "0.9"
+}
