@@ -12,17 +12,27 @@ function bind(obj,func)
 function fetcher()
 {
 	this.docHead= document.getElementsByTagName("head")[0];
-	
+
+	this.boundFetcher= bind(this,this.listenerFetch);
+	this.boundEmpty= bind(this,this.listenerEmpty);	
+
 	this.port = chrome.extension.connect();
-	this.port.onMessage.addListener(bind(this,this.listenerFetch));
 	console.log("[XMIT] port opened");
+
+	// wait for request	
+	//this.port.onMessage.addListener(this.boundFetcher);
+
+	// OR send immediate packet
+	this.port.onMessage.addListener(this.boundEmpty);
+	this.port.postMessage(this.buildPacket());
+	console.log("[XMIT] transmitted");
 }
 
 
-fetcher.prototype.listenerFetch=function(data)
+fetcher.prototype.buildPacket=function(data)
 {
-	console.log("[XMIT] recieved fetch request");
-
+	if(!data) data = new Object();
+	
 	// do fetch
 	var favIcon= this.buildFavIcon(),
 	    referrer= document.referrer,
@@ -34,11 +44,18 @@ fetcher.prototype.listenerFetch=function(data)
 	if(opener) data.opener= opener;
 	if(title) data.title= title;	
 
-	// reply
-	this.port.postMessage(data);
-	
-	console.log("[XMIT] replied fetch request");
+	return data;
 }
+
+
+fetcher.prototype.listenerFetch=function(data)
+{
+	console.log("[XMIT] recieved fetch request"+JSON.stringify(data));
+	this.port.postMessage(this.buildPacket({"id":data.id}));
+}
+
+fetcher.prototype.listenerEmpty=function() {}
+
 
 fetcher.prototype.buildFavIcon=function()
 {

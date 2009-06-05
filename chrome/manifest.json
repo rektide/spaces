@@ -14,7 +14,8 @@
 		"css": [],
 		"js": [
 			"content/hotkey.js",
-			"content/popup.js"
+			"content/popup.js",
+			"content/fetcher.js"
 		]
 	}],
 	"version": "0.9"
