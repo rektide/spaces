@@ -8,12 +8,12 @@ grammar {
 		element tab { TAB_TYPE }
 	TAB_TYPE = 
 		attribute id { text } &
+		attribute event { "Created" | "Updated" | "Moved" | "SelectionChanged" | "Attached" | "Detached" | "Removed" } &
 		attribute windowId { text }? &
 		attribute index { text }? &
 		element url { text }? &
 		element title { text }? &
 		element favIconUrl { text }? &
 		element opener { text }? &
-		element referrer { text }? &
-		element event { "new" | "change" | "close" }?
+		element referrer { text }?
 }

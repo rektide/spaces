@@ -15,7 +15,6 @@ function TabPorts()
 
 TabPorts.prototype.listenerDebugPort=function(data,type,tab)
 {
-	console.log("[DEBUG start]");
 	var tmp= [], tmpTab, tmpPort;
 	for(var i= 0; i<arguments.length; ++i)
 		tmp.push(arguments[i]);
@@ -33,11 +32,11 @@ TabPorts.prototype.listenerDebugPort=function(data,type,tab)
 		delete tab.port;
 		tmp.push("[hasPort]");
 	}
-	
-	try
-		{console.log("[XMIT] DEBUG recieved message ",JSON.stringify(tmp));}
-	catch(err)
-		{console.log("[XMIT] DEBUG recieved message [decode failed]");}
+
+	//try
+	//	{console.log("[XMIT] DEBUG recieved message ",JSON.stringify(tmp));}
+	//catch(err)
+	//	{console.log("[XMIT] DEBUG recieved message [decode failed]");}
 
 	if(tmpPort) tab.port= tmpPort;
 	if(tmpTab) data.tab= tmpTab;
@@ -49,7 +48,7 @@ TabPorts.prototype.listenerPortConnect=function(port)
 	{
 		return function(tab)
 		{
-			console.log("[XMIT] tab bound "+tab.id);
+			//console.log("[XMIT] tab bound "+tab.id);
 			tab.port = port;
 			port.tab = tab;
 
@@ -60,7 +59,7 @@ TabPorts.prototype.listenerPortConnect=function(port)
 			{
 				return function(data)
 				{
-					console.log("[XMIT] listener exec "+tab.id+" "+JSON.stringify(data));
+					//console.log("[XMIT] listener exec "+tab.id+" "+JSON.stringify(data));
 					for(var i in tabParts.listeners)
 						tabParts.listeners[i](data,"msg",tab);
 				};

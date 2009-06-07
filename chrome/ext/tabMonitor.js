@@ -4,6 +4,7 @@ function TabMonitor()
 {
 	// setup
 	this.tabs= [];
+	this.referrers= {};
 	this.filters= [tabStartFilter, tabPositionFilter, tabActiveFilter, tabHistoricalFilter, tabWindowFilter];
 
 	// bind callback functions
@@ -26,18 +27,19 @@ TabMonitor.prototype.listenerChanges=function(target,args)
 		{
 			return function(tb)
 			{
-				console.log("tab registered "+tb.id);
+				//console.log("tab registered "+tb.id);
 				return mon.listenerTab(tb,tar,arg);
 			};
 		}(this,target,args));
 		return;
 	}
-	console.log("handle "+target+" "+StringifyArgs(args));
+	//console.log("handle "+target+" "+StringifyArgs(args),JSON.stringify(tab));
+
 
 	var fail= false, pass= false;
 	for(var i= 0; i<this.filters.length && !fail; ++i)
 	{
-		var filter = this.filters[i](target,args[0],args[1],tab);
+		var filter = this.filters[i].call(this,target,args[0],args[1],tab);
 
 		if(filter == true) pass = true;
 		else if (filter == false) fail= true;
@@ -58,8 +60,8 @@ TabMonitor.prototype.listenerTab=function(tab,target,args)
 TabMonitor.prototype.listenerMessage=function(data,type,tab)
 {
 	if(type != "msg") return;
-	for(var i in data)
-		tab[i]= data[i];
+	if(data.referrer)
+		this.referrers[tab.id] = data.referrer;
 }
 
 TabMonitor.prototype.doTransmitPacket=function(tab)
@@ -70,7 +72,7 @@ TabMonitor.prototype.doTransmitPacket=function(tab)
 	}
 	else
 	{
-		console.log("[XMIT] posting message");
+		//console.log("[XMIT] posting message");
 		tab.port.postMessage(tab.waits.pop());
 	}
 }
@@ -83,37 +85,39 @@ TabMonitor.prototype.buildBinder=function(target)
 	}(this,this.listenerChanges,target.substring(2));
 }
 
-function tabStartFilter(name,id,opts,obj)
+function tabStartFilter(name,id,opts,tab)
 {
-	obj.event= name;
+	tab.event= name;
 	if(name == "Created")
 	{
 		return;
 	}
-	obj.id = id;
+	//tab.id = id;
 }
 
 
-function tabPositionFilter(name,id,opts,obj)
+function tabPositionFilter(name,id,opts,tab)
 {
 	if(arguments.callee.disabled) return;
 
 	if(name == "Created")
 	{
-		obj.index= id.index;
-		obj.windowId= id.windowId;
+		//tab.index= id.index;
+		//tab.windowId= id.windowId;
 	}
 	else if(name == "Moved")
-		obj.index= opts.toIndex;
+	{
+		tab.index= opts.toIndex;
+	}
 	else if(name == "Attached")
 	{
-		obj.index= opts.newPosition;
-		obj.windowId= opts.newWindowId;
+		tab.index= opts.newPosition;
+		tab.windowId= opts.newWindowId;
 	}
 	else if (name == "Detached")
 	{
-		obj.index= oldPosition;
-		obj.windowId= opts.oldWindowId;
+		tab.index= oldPosition;
+		tab.windowId= opts.oldWindowId;
 	}
 	else
 		return;
@@ -121,7 +125,7 @@ function tabPositionFilter(name,id,opts,obj)
 	return true;
 } 
 
-function tabActiveFilter(name,id,opts,obj)
+function tabActiveFilter(name,id,opts,tab)
 {
 	if(arguments.callee.disabled) return;
 
@@ -130,26 +134,36 @@ function tabActiveFilter(name,id,opts,obj)
 	return true;
 }
 
-function tabHistoricalFilter(name,id,opts,obj)
+function tabHistoricalFilter(name,id,opts,tab)
 {
 	if(arguments.callee.disabled) return;
 	if(name != "Updated") return;
 
-	return opts.status == "complete";
+	var complete= opts.status == "complete";
+	if(!complete)
+		delete this.referrers[tab.id];
+	else
+	{
+		var ref= this.referrers[tab.id];
+		if(ref)
+			tab.referrer= ref;
+	}
+
+	return complete;
 }
 
-function tabWindowFilter(name,id,opts,obj)
+function tabWindowFilter(name,id,opts,tab)
 {
 	if(arguments.callee.disabled) return;
 
 	if(name == "Attached")
-		obj.windowId= opts.newWindowId;
+		tab.windowId= opts.newWindowId;
 	else if(name == "Detached")
-		obj.windowId= opts.oldWindowId;
+		tab.windowId= opts.oldWindowId;
 	else if(name == "Removed")
-		obj.windowId= opts.oldWindowId;
-	else if(name == "Created")
-		obj.windowId= id.windowId;
+		tab.windowId= id;
+	//else if(name == "Created")
+	//	tab.windowId= id.windowId;
 	else
 		return;
 	
