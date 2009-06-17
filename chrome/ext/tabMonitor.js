@@ -1,5 +1,3 @@
-console.log("[tm file]");
-
 function TabMonitor()
 {
 	// setup
@@ -16,6 +14,12 @@ function TabMonitor()
 	var tabEvents= ["onCreated","onUpdated","onMoved","onSelectionChanged","onAttached","onDetached","onRemoved"];
 	this.wiring= new eventWirer(chrome.tabs);
 	this.wiring.bindHandler(tabEvents, this.boundBinder);
+
+	this.app= new AtomPubClient("http://numenological:8080/app/v2/space/rektide");
+
+	var handler= function(xhr,app)
+		{console.log("xhr "+xhr.status+": "+xhr.responseText);}
+	this.app.listeners.push(handler);
 }
 
 TabMonitor.prototype.listenerChanges=function(target,args)
@@ -68,7 +72,19 @@ TabMonitor.prototype.doTransmitPacket=function(tab)
 {
 	if(!tab.waits || tab.waits.length == 0)
 	{
-		console.log("transmit "+toXmlString(tab));
+		var str= toXmlString(tab);
+		console.log("transmit "+str);
+		str = '<?xml version="1.0"?>' +
+			'<entry xmlns="http://www.w3.org/2005/Atom">' +
+			'<title>Atom Robots Running Amok</title>' +
+			'<id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>' +
+			'<updated>2003-12-13T18:30:02Z</updated>' +
+			'<author><name>rektide</name></author>' +
+			'<content>' + str +'</content>' +
+			'</entry>' ;
+
+
+		this.app.post(str);
 	}
 	else
 	{

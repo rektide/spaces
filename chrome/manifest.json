@@ -4,7 +4,8 @@
 	"name": "Space Logger", 
 	"permissions": [
 		"http://*.eldergods.com/", 
-		"http://*.eldergods.com:8080/"
+		"http://*.eldergods.com:8080/",
+		"http://numenological:8080/"
 	], 
 	"toolstrips": [
 		"ext/space_strip.html"
