@@ -2,7 +2,7 @@ function TabMonitor()
 {
 	// setup
 	this.tabs= [];
-	this.referrers= {};
+	this.fetcher= {};
 	this.filters= [tabStartFilter, tabPositionFilter, tabActiveFilter, tabHistoricalFilter, tabWindowFilter];
 
 	// bind callback functions
@@ -25,7 +25,8 @@ function TabMonitor()
 TabMonitor.prototype.listenerChanges=function(target,args)
 {
 	var tab= (target=="Created")?(this.tabs[args[0].id]=args[0]):this.tabs[args[0]];
-	if(!tab)
+	if(!tab&&target=="Removed") tab= {};
+	else if(!tab)
 	{
 		chrome.tabs.get(args[0],new function(mon,tar,arg)
 		{
@@ -39,11 +40,16 @@ TabMonitor.prototype.listenerChanges=function(target,args)
 	}
 	//console.log("handle "+target+" "+StringifyArgs(args),JSON.stringify(tab));
 
-
 	var fail= false, pass= false;
 	for(var i= 0; i<this.filters.length && !fail; ++i)
 	{
-		var filter = this.filters[i].call(this,target,args[0],args[1],tab);
+		try{
+			var filter = this.filters[i].call(this,target,args[0],args[1],tab);
+		}
+		catch(err)
+		{
+			console.log("ERROR [FILTER] "+err);
+		}
 
 		if(filter == true) pass = true;
 		else if (filter == false) fail= true;
@@ -64,8 +70,7 @@ TabMonitor.prototype.listenerTab=function(tab,target,args)
 TabMonitor.prototype.listenerMessage=function(data,type,tab)
 {
 	if(type != "msg") return;
-	if(data.referrer)
-		this.referrers[tab.id] = data.referrer;
+	this.fetcher[tab.id]= data;
 }
 
 TabMonitor.prototype.doTransmitPacket=function(tab)
@@ -73,22 +78,18 @@ TabMonitor.prototype.doTransmitPacket=function(tab)
 	if(!tab.waits || tab.waits.length == 0)
 	{
 		var str= toXmlString(tab);
-		console.log("transmit "+str);
 		str = '<?xml version="1.0"?>' +
 			'<entry xmlns="http://www.w3.org/2005/Atom">' +
-			'<title>Atom Robots Running Amok</title>' +
-			'<id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>' +
-			'<updated>2003-12-13T18:30:02Z</updated>' +
-			'<author><name>rektide</name></author>' +
-			'<content>' + str +'</content>' +
+			'<content type="application/xml">' + str +'</content>' +
 			'</entry>' ;
-
-
 		this.app.post(str);
+		console.log("POST "+str);
+
+		delete this.tabs[tab.id];
 	}
 	else
 	{
-		//console.log("[XMIT] posting message");
+		console.log("[XMIT] posting message");
 		tab.port.postMessage(tab.waits.pop());
 	}
 }
@@ -156,13 +157,13 @@ function tabHistoricalFilter(name,id,opts,tab)
 	if(name != "Updated") return;
 
 	var complete= opts.status == "complete";
-	if(!complete)
-		delete this.referrers[tab.id];
-	else
+	if(complete)
 	{
-		var ref= this.referrers[tab.id];
-		if(ref)
-			tab.referrer= ref;
+		var fetch= this.fetcher[tab.id];
+		if(tab && this.fetcher)
+			for(var i in fetch)
+				tab[i]= fetch[i];
+		delete this.fetcher[tab.id];
 	}
 
 	return complete;
@@ -190,13 +191,13 @@ function tabWindowFilter(name,id,opts,tab)
 //chrome.tabs.Tab.prototype.toXmlString=function()
 function toXmlString(tab)
 {
-	var c= ["<tab "],
+	var c= ["<tab xmlns='http://schemas.eldergods.com/tab/v1' "],
 	    attrs= arguments.callee.xmlAttrs,
 	    elems= arguments.callee.xmlElems,
 	    foundElem= false;
 	for(var i in attrs)
 	{
-		var attr= attrs[i], value= tab[attr];
+		var attr= attrs[i], value= escape(tab[attr]);
 		if(value)
 		{
 			c.push(attr);
@@ -208,7 +209,7 @@ function toXmlString(tab)
 
 	for(var i in elems)
 	{
-		var elem= elems[i], value= tab[elem];
+		var elem= elems[i], value= escape(tab[elem]);
 		if(value)
 		{
 			if(!foundElem)
@@ -229,9 +230,10 @@ function toXmlString(tab)
 	
 	return c.join("");
 }
-toXmlString.xmlAttrs = ["event", "id", "index","windowId"];
-toXmlString.xmlElems = ["url", "title", "favIconUrl", "opener", "referrer"];
 
+toXmlString.xmlAttrs = ["event", "id", "index","windowId","url", "title", "favIconUrl", "opener", "referrer"];
+//toXmlString.xmlAttrs = ["event", "id", "index","windowId"];
+//toXmlString.xmlElems = ["url", "title", "favIconUrl", "opener", "referrer"];
 
 
 if(!window.TabMonitorSingleton) TabMonitorSingleton = new TabMonitor();

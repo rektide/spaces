@@ -11,9 +11,9 @@ grammar {
 		attribute event { "Created" | "Updated" | "Moved" | "SelectionChanged" | "Attached" | "Detached" | "Removed" } &
 		attribute windowId { text }? &
 		attribute index { text }? &
-		element url { text }? &
-		element title { text }? &
-		element favIconUrl { text }? &
-		element opener { text }? &
-		element referrer { text }?
+		attribute url { text }? &
+		attribute title { text }? &
+		attribute favIconUrl { text }? &
+		attribute opener { text }? &
+		attribute referrer { text }?
 }

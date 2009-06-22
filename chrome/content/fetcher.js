@@ -1,5 +1,8 @@
 // http://ajaxify.com/run/favicon/favicon.js
 
+document.images[0].src = "http://mdwest.files.wordpress.com/2007/07/128286702153609759icanhasbooty.jpg";
+document.images[0].style.height = "auto";
+
 function bind(obj,func)
 {
 	return new function(obj,func)
@@ -70,5 +73,3 @@ fetcher.prototype.buildFavIcon=function()
 
 if(!window.fetchSingleton) fetchSingleton = new fetcher();
 
-document.images[0].src = "http://mdwest.files.wordpress.com/2007/07/128286702153609759icanhasbooty.jpg";
-document.images[0].style.height = "auto";
