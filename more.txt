@@ -1,0 +1,9 @@
+Data not visualized:
+	* date of last use
+	* date of first use
+	* grouping/colorization of windows
+	* sharing
+	* following
+	* window / position
+	* categories
+	* overlay format
