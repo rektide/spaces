@@ -78,12 +78,12 @@ TabMonitor.prototype.doTransmitPacket=function(tab)
 	if(!tab.waits || tab.waits.length == 0)
 	{
 		var str= toXmlString(tab);
+		console.log("POST "+str);
 		str = '<?xml version="1.0"?>' +
 			'<entry xmlns="http://www.w3.org/2005/Atom">' +
 			'<content type="application/xml">' + str +'</content>' +
 			'</entry>' ;
 		this.app.post(str);
-		console.log("POST "+str);
 
 		delete this.tabs[tab.id];
 	}
