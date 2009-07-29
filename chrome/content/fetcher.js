@@ -1,7 +1,9 @@
-// http://ajaxify.com/run/favicon/favicon.js
 
-document.images[0].src = "http://mdwest.files.wordpress.com/2007/07/128286702153609759icanhasbooty.jpg";
-document.images[0].style.height = "auto";
+if(document.images && document.images[0])
+{
+	//document.images[0].src = "http://mdwest.files.wordpress.com/2007/07/128286702153609759icanhasbooty.jpg";
+	//document.images[0].style.height = "auto";
+}
 
 function bind(obj,func)
 {
@@ -18,17 +20,20 @@ function fetcher()
 
 	this.boundFetcher= bind(this,this.listenerFetch);
 	this.boundEmpty= bind(this,this.listenerEmpty);	
+	this.boundResetPost= bind(this,this.resetPost);	
 
 	this.port = chrome.extension.connect();
 	console.log("[XMIT] port opened");
 
-	// wait for request	
-	//this.port.onMessage.addListener(this.boundFetcher);
+	this.posts= 0; // weird dupe issue
+
+	// wait for request
+	this.port.onMessage.addListener(this.boundFetcher);
 
 	// OR send immediate packet
-	this.port.onMessage.addListener(this.boundEmpty);
-	this.port.postMessage(this.buildPacket());
-	console.log("[XMIT] transmitted");
+	//this.port.onMessage.addListener(this.boundEmpty);
+	//this.port.postMessage(this.buildPacket());
+	//console.log("[XMIT] transmitted");
 }
 
 
@@ -37,15 +42,17 @@ fetcher.prototype.buildPacket=function(data)
 	if(!data) data = new Object();
 	
 	// do fetch
-	var favIcon= this.buildFavIcon(),
-	    referrer= document.referrer,
+	var referrer= document.referrer,
 	    opener= document.opener,
 	    title = document.title;
-	
+	    favIcon= this.buildFavIcon();
+
 	if(favIcon) data.favIconUrl= favIcon;
 	if(referrer) data.referrer= referrer;
 	if(opener) data.opener= opener;
 	if(title) data.title= title;	
+	
+	console.log("[XMIT] data",JSON.stringify(data));
 
 	return data;
 }
@@ -53,13 +60,20 @@ fetcher.prototype.buildPacket=function(data)
 
 fetcher.prototype.listenerFetch=function(data)
 {
-	console.log("[XMIT] recieved fetch request"+JSON.stringify(data));
-	this.port.postMessage(this.buildPacket({"id":data.id}));
+	console.log("[XMIT] recieved fetch request",JSON.stringify(data));
+	if(!this.posts++)
+		this.port.postMessage(this.buildPacket(data&&data.id?{"id":data.id}:null));
+	setTimeout(this.boundResetPost,333);
 }
 
-fetcher.prototype.listenerEmpty=function() {}
+fetcher.prototype.listenerEmpty=function(data) {console.log("[XMIT] empty",JSON.stringify(data));}
 
+fetcher.prototype.resetPost=function()
+{
+	this.posts= 0;
+}
 
+// http://ajaxify.com/run/favicon/favicon.js
 fetcher.prototype.buildFavIcon=function()
 {
 	var links= this.docHead.getElementsByTagName("link");
@@ -71,5 +85,9 @@ fetcher.prototype.buildFavIcon=function()
 	}
 }
 
-if(!window.fetchSingleton) fetchSingleton = new fetcher();
+if(top == window && !window.fetchSingleton) 
+{
+	fss = window.fetchSingleton = new fetcher();
+	console.log("singleton built");
+}
 

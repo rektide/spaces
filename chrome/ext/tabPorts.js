@@ -2,6 +2,8 @@ function TabPorts()
 {
 	this.bindPort= true;
 	this.bindTab= true;
+	
+	this.tabIndex= [];
 
 	this.boundListenerPort= bind(this,this.listenerPort);
 	this.boundListenerPortConnect= bind(this,this.listenerPortConnect);
@@ -49,8 +51,9 @@ TabPorts.prototype.listenerPortConnect=function(port)
 		return function(tab)
 		{
 			//console.log("[XMIT] tab bound "+tab.id);
-			tab.port = port;
-			port.tab = tab;
+			tabPorts.tabIndex[tab.id] = port;
+			if(this.bindPort) tab.port = port;
+			if(this.bindTab) port.tab = tab;
 
 			for(var i in tabPorts.listeners)
 				tabPorts.listeners[i](port,"connect",tab);
@@ -70,5 +73,5 @@ TabPorts.prototype.listenerPortConnect=function(port)
 
 }
 
-if(!window.TabPortsSingleton) TabPortsSingleton = new TabPorts();
+if(!window.TabPortsSingleton) tps = TabPortsSingleton = new TabPorts();
 

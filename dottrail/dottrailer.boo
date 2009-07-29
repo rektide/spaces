@@ -160,7 +160,7 @@ class DotTrailer:
 				tabs.Add(tab)
 				print "Site",tab.Url,"added"
 		
-			# member install	
+			# member install
 			try:
 				tab.TabId= Convert.ToInt32(attr["tabId"].Value)
 			except ex:
@@ -176,11 +176,7 @@ class DotTrailer:
 			except ex:
 				pass
 			
-			try:
-				tab.Referrer= Uri(Uri.UnescapeDataString(attr.GetNamedItem("referrer").Value))
-			except ex:
-				pass
-			
+		
 			try:
 				tab.Opener= Uri(Uri.UnescapeDataString(attr.GetNamedItem("opener").Value))
 			except ex:
@@ -188,6 +184,11 @@ class DotTrailer:
 			
 			try:
 				tab.FavIconUrl= Uri(Uri.UnescapeDataString(attr.GetNamedItem("favIconUrl").Value))
+			except ex:
+				pass
+	
+			try:
+				tab.Referrer= Uri(Uri.UnescapeDataString(attr.GetNamedItem("referrer").Value))
 			except ex:
 				pass
 			
@@ -203,6 +204,8 @@ class DotTrailer:
 		print "REGEN writing file"
 		o= StreamWriter(outFile+".dot")
 		o.WriteLine("digraph g {")
+		o.WriteLine("	packmode = cluster;")
+		o.WriteLine("	pack = 3;")
 	
 		lock domains:	
 			for d in domains:
@@ -210,9 +213,10 @@ class DotTrailer:
 					url= cleanName(tab.Url.ToString())
 					continue if not url
 				
-					refTab= lookup(tab.Referrer)
 					refr as string
 					refr= cleanName(tab.Referrer.ToString()) if tab.Referrer
+					refTab= lookup(tab.Referrer)
+					refr= cleanName(refTab.Url.ToString()) if refTab 
 					name= cleanName(tab.Title)
 					
 					if refr:
@@ -222,6 +226,14 @@ class DotTrailer:
 						o.Write(refr)
 						o.Write("[style=dashed]") if refTab and not refTab.Alive
 						o.Write(";\n")
+						if not refTab:
+							o.Write("\t")
+							o.Write(refr)
+							o.Write("[id=")
+							o.Write(refr)
+							o.Write(" URL=\"\\N\"];\n")
+					else:
+						print "no refr",name
 					
 					o.Write("\t")
 					o.Write(url)
@@ -261,4 +273,4 @@ class DotTrailer:
 		return null
 
 DotTrailer("http://numenological:8080/app/v2/space/rektide/","outfile",5000)
-Thread.Sleep(1000000)
+Thread.Sleep(-1)

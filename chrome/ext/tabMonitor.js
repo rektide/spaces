@@ -18,7 +18,8 @@ function TabMonitor()
 	this.app= new AtomPubClient("http://numenological:8080/app/v2/space/rektide");
 
 	var handler= function(xhr,app)
-		{console.log("xhr "+xhr.status+": "+xhr.responseText);}
+		{}
+		//{console.log("xhr "+xhr.status+": "+xhr.responseText);}
 	this.app.listeners.push(handler);
 }
 
@@ -38,7 +39,7 @@ TabMonitor.prototype.listenerChanges=function(target,args)
 		}(this,target,args));
 		return;
 	}
-	//console.log("handle "+target+" "+StringifyArgs(args),JSON.stringify(tab));
+	console.log("handle "+target+" "+StringifyArgs(args),JSON.stringify(tab),tps.tabIndex[tab.id]);
 
 	var fail= false, pass= false;
 	for(var i= 0; i<this.filters.length && !fail; ++i)
@@ -51,6 +52,7 @@ TabMonitor.prototype.listenerChanges=function(target,args)
 			console.log("ERROR [FILTER] "+err);
 		}
 
+		//console.log("filter",i,filter);
 		if(filter == true) pass = true;
 		else if (filter == false) fail= true;
 	}
@@ -70,28 +72,24 @@ TabMonitor.prototype.listenerTab=function(tab,target,args)
 TabMonitor.prototype.listenerMessage=function(data,type,tab)
 {
 	if(type != "msg") return;
+	
 	this.fetcher[tab.id]= data;
+	tab.event= "Updated";
+	this.doTransmitPacket(tab);
 }
 
 TabMonitor.prototype.doTransmitPacket=function(tab)
 {
-	if(!tab.waits || tab.waits.length == 0)
-	{
-		var str= toXmlString(tab);
-		console.log("POST "+str);
-		str = '<?xml version="1.0"?>' +
-			'<entry xmlns="http://www.w3.org/2005/Atom">' +
-			'<content type="application/xml">' + str +'</content>' +
-			'</entry>' ;
-		this.app.post(str);
+	this.runFetcher(tab);
+	var str= toXmlString(tab);
+	console.log("POST "+str);
+	str = '<?xml version="1.0"?>' +
+		'<entry xmlns="http://www.w3.org/2005/Atom">' +
+		'<content type="application/xml">' + str +'</content>' +
+		'</entry>' ;
+	this.app.post(str);
 
-		delete this.tabs[tab.id];
-	}
-	else
-	{
-		console.log("[XMIT] posting message");
-		tab.port.postMessage(tab.waits.pop());
-	}
+	delete this.tabs[tab.id];
 }
 
 TabMonitor.prototype.buildBinder=function(target)
@@ -157,16 +155,25 @@ function tabHistoricalFilter(name,id,opts,tab)
 	if(name != "Updated") return;
 
 	var complete= opts.status == "complete";
-	if(complete)
+	if(complete && !tab.referrer)
 	{
-		var fetch= this.fetcher[tab.id];
-		if(tab && this.fetcher)
-			for(var i in fetch)
-				tab[i]= fetch[i];
-		delete this.fetcher[tab.id];
+		//console.log("[XMIT] posting message");
+		tps.tabIndex[tab.id].postMessage();
+		return false;
 	}
 
 	return complete;
+}
+
+TabMonitor.prototype.runFetcher=function(tab)
+{
+	var fetch= this.fetcher[tab.id];
+	if(fetch)
+	{
+		for(var i in fetch)
+			tab[i]= fetch[i];
+		delete this.fetcher[tab.id];
+	}
 }
 
 function tabWindowFilter(name,id,opts,tab)
@@ -197,9 +204,10 @@ function toXmlString(tab)
 	    foundElem= false;
 	for(var i in attrs)
 	{
-		var attr= attrs[i], value= escape(tab[attr]);
+		var attr= attrs[i], value= tab[attr];
 		if(value)
 		{
+			value= escape(value);
 			c.push(attr);
 			c.push("='");
 			c.push(value);
@@ -209,9 +217,10 @@ function toXmlString(tab)
 
 	for(var i in elems)
 	{
-		var elem= elems[i], value= escape(tab[elem]);
+		var elem= elems[i], value= tab[elem];
 		if(value)
 		{
+			value= escape(value);
 			if(!foundElem)
 			{
 				foundElem= true;

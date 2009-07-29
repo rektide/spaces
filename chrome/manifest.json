@@ -11,12 +11,11 @@
 		"ext/space_strip.html"
 	],
 	"content_scripts": [{
-		"matches": ["http://*.google.com/*"],
+		"matches": ["http://*/*","https://*/*"],
 		"css": [],
 		"js": [
-			"content/hotkey.js",
-			"content/popup.js",
-			"content/fetcher.js"
+			"content/fetcher.js",
+			"content/dialog.js"
 		]
 	}],
 	"version": "0.9"

@@ -1,3 +1,13 @@
+Focus of entry:
+	* visual layout / spatializehttp://numenological/outfile.circo.svg 
+	* historical focus
+	* grouping of related tabs 
+	
+
+
+
+
+
 Data not visualized:
 	* date of last use
 	* date of first use
@@ -7,3 +17,4 @@ Data not visualized:
 	* window / position
 	* categories
 	* overlay format
+
