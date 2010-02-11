@@ -1,4 +1,4 @@
-default namespace tab = "http://schemas.eldergods.com/tab/v1"
+default namespace tab = "http://schema.eldergods.com/tab/v1"
 #namespace xs = "http://www.w3.org/2001/XMLSchema-datatypes"
 #datatypes xs = "http://www.w3.org/2001/XMLSchema-datatypes"
 
