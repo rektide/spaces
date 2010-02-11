@@ -71,7 +71,7 @@ class DotTrailer:
 
 		nsManager.AddNamespace("atom","http://www.w3.org/2005/Atom")
 		nsManager.AddNamespace("as","http://atomserver.org/namespaces/1.0/")
-		nsManager.AddNamespace("t","http://schemas.eldergods.com/tab/v1")
+		nsManager.AddNamespace("t","http://schema.eldergods.com/tab/v1.1")
 	
 	def checkFeed(state):
 		haveMutex= checkMutex.WaitOne(0)

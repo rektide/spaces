@@ -198,7 +198,7 @@ function tabWindowFilter(name,id,opts,tab)
 //chrome.tabs.Tab.prototype.toXmlString=function()
 function toXmlString(tab)
 {
-	var c= ["<tab xmlns='http://schemas.eldergods.com/tab/v1' "],
+	var c= ["<tab xmlns='http://schema.eldergods.com/tab/v1.1' "],
 	    attrs= arguments.callee.xmlAttrs,
 	    elems= arguments.callee.xmlElems,
 	    foundElem= false;
