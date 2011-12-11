@@ -1,0 +1,19 @@
+default namespace tab = "http://schema.eldergods.com/tab/v1.1"
+#namespace xs = "http://www.w3.org/2001/XMLSchema-datatypes"
+#datatypes xs = "http://www.w3.org/2001/XMLSchema-datatypes"
+
+grammar {
+	start = TAB
+	TAB =
+		element tab { TAB_TYPE }
+	TAB_TYPE = 
+		attribute id { text } &
+		attribute event { "Created" | "Updated" | "Moved" | "SelectionChanged" | "Attached" | "Detached" | "Removed" } &
+		attribute windowId { text }? &
+		attribute index { text }? &
+		attribute url { text }? &
+		attribute title { text }? &
+		attribute favIconUrl { text }? &
+		attribute opener { text }? &
+		attribute referrer { text }?
+}
